@@ -1,46 +1,53 @@
 # -*- coding: utf-8 -*-
 import scrapy
-
+import datetime
 
 class LookbookScraperSpider(scrapy.Spider):
     name = 'lookbook_scraper'
     allowed_domains = ['www.lookbook.nu']
     start_urls = ['http://www.lookbook.nu/united-states']
 
+    def to_time(self, string):
+        string = string.replace('day', 'days')
+        string = string.replace('hour', 'hours')
+        string = string.replace('minute', 'minutes')
+        string = string.replace('ss', 's')
+
+        parsed_s = [string.split()[:2]]
+        time_dict = dict((fmt, float(amount)) for amount, fmt in parsed_s)
+        dt = datetime.timedelta(**time_dict)
+        past_time = datetime.datetime.now() - dt
+        return past_time
+
+
+    def parse_look(self, look):
+
+        id = look.xpath("@data-look-id").extract()[0]
+        full_id = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
+        img = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0]
+        hypes = look.xpath("//div[@class='hype' and @data-look-id='%s']/div/text()" % id).extract()[0]
+        country = look.xpath("//div[@id='look_%s']//a[starts-with(@data-page-track,'byline - country')]/text()" % id).extract()[0]
+        hashtags = look.xpath("//div[@id='look_%s']/ul/li/a/text()" % id).extract()
+        timeago = look.xpath("//div[@id='look_%s']//div[@class='look-info']/text()" % id).extract()[-1].strip()
+        created = self.to_time(timeago)
+
+        item = {
+            'id': id,
+            'full_id': full_id,
+            'created': created,
+            'country': country,
+            'hashtags': hashtags,
+            'hypes': hypes,
+            'img_src': img,
+        }
+
+        print('\n')
+        return item
+
 
     def parse(self, response):
         print("Processing..." + response.url)
-        # product_name = response.xpath("//div[@class='look_v2']/div[@class='look-meta']/a[@class='title']/text()").extract()
-        # title_name = response.xpath('//a[@class="item-title"]/text()').extract()
-        # country = response.xpath("//ul[@id='country_collections']/li/a[@href]")
-        look_id = response.xpath("//div[@class='look-meta']/a/@href").extract()
-        look_img = response.xpath("//div[@class='look_photo']/a/img/@src").extract()
-        hypes = response.xpath("//div[@class='hypes-count']/text()").extract()
-        just_id = response.xpath("//div[@class='look_v2']/@data-look-id").extract()
-
-        # tags = response.xpath("//div[@class='look_v2']/ul[@class='hashtags']/li/a/text()").extract()
-        tags = []
-
-        aas = "//div[@data-look-id='%s']/ul/li" % just_id
-
-        for li in response.xpath(aas):
-            # li.xpath('//li/text()').extract()
-            tags.append(li.xpath("/a/text()").extract())
-
-        row_data = zip(look_id, look_img, hypes, tags)
-
-        for item in row_data:
-            scraped_info = {
-                'page': response.url,
-                'look_id': item[0],
-                'look_img': item[1],
-                'hypes': item[2],
-                'tags': item[3]
-            }
-
-            yield scraped_info
-
-
-    # def parse(self, response):
-    #     for look in response.xpath('//li[starts-with(@id,"look_")]'):
-    #         yield self.parse_look(look)
+        look_xpath = "//div[starts-with(@id,'look_') and @class='look_v2']"
+        for look in response.xpath(look_xpath):
+            # print(look)
+            yield self.parse_look(look)

@@ -5,7 +5,7 @@ import scrapy
 class AliexpressTabletsSpider(scrapy.Spider):
     name = 'aliexpress_tablets'
     # allowed_domains = ['https://www.aliexpress.com']
-    start_urls = ['https://www.aliexpress.com/']
+    start_urls = ['https://www.aliexpress.com/category/7/computer-office.html?switch_new_app=y']
 
     def parse(self, response):
         print("Processing..." + response.url)
