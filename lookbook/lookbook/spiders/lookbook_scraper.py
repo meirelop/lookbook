@@ -2,14 +2,24 @@
 import scrapy
 from scrapy.http.request import Request
 import datetime
+from datetime import date
+from dateutil.relativedelta import relativedelta
+import math
 
 class LookbookScraperSpider(scrapy.Spider):
-    page = 1
+    PER_PAGE = 12
+    INITIAL_PAGE = 1
+    max_items = 12
+    last_page = int(math.ceil(max_items/PER_PAGE))
     name = 'lookbook_scraper'
-    allowed_domains = ['www.lookbook.nu']
-    start_urls = ['http://www.lookbook.nu/united-states']
+    # allowed_domains = ['www.lookbook.nu']
+    start_urls = ['http://www.lookbook.nu/new']
 
     def to_time(self, string):
+        string = string.replace('over', '')
+        string = string.replace('year', 'years')
+        string = string.replace('month', 'months')
+        string = string.replace('week', 'weeks')
         string = string.replace('day', 'days')
         string = string.replace('hour', 'hours')
         string = string.replace('minute', 'minutes')
@@ -17,12 +27,20 @@ class LookbookScraperSpider(scrapy.Spider):
 
         parsed_s = [string.split()[:2]]
         time_dict = dict((fmt, float(amount)) for amount, fmt in parsed_s)
-        dt = datetime.timedelta(**time_dict)
-        past_time = datetime.datetime.now() - dt
+        if time_dict.get('months'):
+            past_time = date.today() - relativedelta(months=time_dict['months'])
+        elif time_dict.get('years'):
+            past_time = datetime.datetime.now() - datetime.timedelta(days=time_dict['years'] * 365)
+        else:
+            dt = datetime.timedelta(**time_dict)
+            past_time = datetime.datetime.now() - dt
+
         return past_time
 
 
     def parse_look(self, look):
+        import time
+        time.sleep(0.5)
 
         id = look.xpath("@data-look-id").extract()[0]
         full_id = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
@@ -47,36 +65,31 @@ class LookbookScraperSpider(scrapy.Spider):
         return item
 
 
-    # def parse_page(self, response):
-    #     # First, check if next page available, if found, yield request
-    #     next_link = response.xpath(
-    #         "//a[@class='page-link next-page']/@href").extract_first()
-    #     if next_link:
-    #         # If the website has strict policy, you should do more work here
-    #         # Such as modifying HTTP headers
-    #
-    #         # concatenate url
-    #         url = response.url
-    #         next_link = url[:url.find('?')] + next_link
-    #         yield Request(
-    #             url=next_link,
-    #             callback=self.parse_list_page
-    #         )
-    #
-    #     # find product link and yield request back
-    #     for req in self.parse(response):
-    #         yield req
-
-
-    def parse(self, response):
-        print("Processing..." + response.url)
+    def parse_country(self, response, country_url):
+        # print("Parsing country...")
         look_xpath = "//div[starts-with(@id,'look_') and @class='look_v2']"
         for look in response.xpath(look_xpath):
             # print(look)
             yield self.parse_look(look)
 
-        if self.page < 5:
+        self.INITIAL_PAGE += 1
+        if self.INITIAL_PAGE <= self.last_page:
             yield scrapy.Request(
-                url='http://www.lookbook.nu/united-states?page=' + str(self.page),
-                callback=self.parse)
-        self.page += 1
+                url=country_url + '?page=' + str(self.INITIAL_PAGE),
+                callback=self.parse_country,
+                cb_kwargs=dict(country_url=country_url))
+
+
+
+    def parse(self, response):
+        print("Processing..." + response.url)
+        countries = response.xpath("//ul[@id='country_collections']/li/a/@href").extract()
+        # countries = countries[0:1]
+        # print('TOTAL COUNTRIES: 43')
+        for country in countries:
+            print(country)
+            request = scrapy.Request(url=country,
+                                     callback=self.parse_country,
+                                     cb_kwargs=dict(country_url=country))
+            # request.cb_kwargs['country_url'] = country
+            yield request
