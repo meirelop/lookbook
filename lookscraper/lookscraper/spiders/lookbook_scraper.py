@@ -4,19 +4,26 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import math
 from ..items import LookbookItem
-
+from icrawler.config.settings.base import *
 
 class LookbookScraperSpider(scrapy.Spider):
+    """
+    Spider class to parse looks from lookbook.nu
+    """
     PER_PAGE = 12
     INITIAL_PAGE = 1
     max_items = 100
-    last_page = int(math.ceil(max_items/PER_PAGE))
+    last_page = int(math.ceil(max_items/PER_PAGE))  # calculate how many pages we need in order to get max_items items
     name = 'lookbook_scraper'
     # allowed_domains = ['www.lookbook.nu']
     start_urls = ['http://www.lookbook.nu/new']
 
 
     def to_time(self, string):
+        """
+        :param string: Time string. Ex: 3 hours ago
+        :return: Python date in datetime format
+        """
         string = string.replace('over', '')
         string = string.replace('year', 'years')
         string = string.replace('month', 'months')
@@ -40,18 +47,22 @@ class LookbookScraperSpider(scrapy.Spider):
 
 
     def parse_look(self, look):
+        """
+        :param look: look page
+        :return: Parse details for every post and save them in Django database
+        """
         item = LookbookItem()
 
         id = look.xpath("@data-look-id").extract()[0]
-        item['look_id'] = id
-        item['full_id'] = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
-        item['img_url'] = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0].strip('//')
-        item['hype'] = look.xpath("//div[@class='hype' and @data-look-id='%s']/div/text()" % id).extract()[0]
-        item['country'] = look.xpath("//div[@id='look_%s']//a[starts-with(@data-page-track,'byline - country')]/text()" % id).extract()[0]
+        item[LOOK_ID] = id
+        item[LOOK_FULL_ID] = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
+        item[LOOK_IMG_URL] = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0].strip('//')
+        item[LOOK_HYPE] = look.xpath("//div[@class='hype' and @data-look-id='%s']/div/text()" % id).extract()[0]
+        item[LOOK_COUNTRY] = look.xpath("//div[@id='look_%s']//a[starts-with(@data-page-track,'byline - country')]/text()" % id).extract()[0]
         hashtags_temp = look.xpath("//div[@id='look_%s']/ul/li/a/text()" % id).extract()
-        item['hashtags'] = [tag.replace('#', '') for tag in hashtags_temp]
+        item[LOOK_HASHTAGS] = [tag.replace('#', '') for tag in hashtags_temp]
         timeago = look.xpath("//div[@id='look_%s']//div[@class='look-info']/text()" % id).extract()[-1].strip()
-        item['created'] = self.to_time(timeago)
+        item[LOOK_CREATED] = self.to_time(timeago)
 
         print('\n')
         item.save()
@@ -59,6 +70,10 @@ class LookbookScraperSpider(scrapy.Spider):
 
 
     def parse_country(self, response, country_url):
+        """
+        :param country_url: url of specific country page. Ex: lookbook.nu/poland
+        :return: Generate pages for every country
+        """
         look_xpath = "//div[starts-with(@id,'look_') and @class='look_v2']"
         for look in response.xpath(look_xpath):
             yield self.parse_look(look)
@@ -71,11 +86,12 @@ class LookbookScraperSpider(scrapy.Spider):
                 cb_kwargs=dict(country_url=country_url))
 
 
-
     def parse(self, response):
+        """
+        :return: Get country list from main page and iterate
+        """
         print("Processing..." + response.url)
         countries = response.xpath("//ul[@id='country_collections']/li/a/@href").extract()
-        # countries = countries[0:1]
         # print('TOTAL COUNTRIES:', countries)
         for country in countries:
             print(country)

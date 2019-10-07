@@ -3,6 +3,6 @@
   "DJANGO_DB_NAME":"test",
   "DJANGO_DB_USER":"meirkhan",
   "DJANGO_DB_PASSWORD":"meirkhan",
-  "DJANGO_DB_HOST":"localhost",
+  "DJANGO_DB_HOST":"mongodb://meirkhan:meirkhan@localhost:27017/",
   "DJANGO_DB_PORT":"27017"
 }

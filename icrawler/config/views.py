@@ -5,9 +5,19 @@ from django.conf import settings
 import ast
 import operator
 from collections import OrderedDict
+from ..config.settings.base import *
 
 
 def get_posts_by_country(request):
+    """
+    :return: For a given country, returns the number of posts associated with each hashtag
+
+    Args:
+        country - target country
+
+    Examples:
+        http://localhost:8000/get_posts_by_country?country=austria
+    """
 
     std_response = HttpResponse('[]', content_type="application/json")
     country = request.GET.get('country', None)
@@ -19,12 +29,13 @@ def get_posts_by_country(request):
 
     # TODO: make search by country names case insensitive
     result_dict = {}
-    cursor = mongo_collection.find({'country': country})
+    cursor = mongo_collection.find({LOOK_COUNTRY: country})
 
     # TODO: optimize processing of query
     for document in cursor:
-        hashtags = ast.literal_eval(document['hashtags'])
+        hashtags = ast.literal_eval(document[LOOK_HASHTAGS])
         for tag in hashtags:
+
             if tag in result_dict:
                 result_dict[tag] += 1
             else:
@@ -37,6 +48,15 @@ def get_posts_by_country(request):
 
 
 def get_hype_by_tag(request):
+    """
+    :return: For a given hashtag, return the image URLs of posts sorted by “hype” (from largest to smallest)
+
+    Args:
+        hashtag - target hashtag
+
+    Examples:
+        http://localhost:8000/get_hype_by_tag?hashtag=fashion
+    """
 
     std_response = HttpResponse('[]', content_type="application/json")
     hashtag = request.GET.get('hashtag', None)
@@ -51,12 +71,10 @@ def get_hype_by_tag(request):
     hype_dict = {}
     cursor = mongo_collection.find({})
 
-    # TODO: optimize processing of query
     for document in cursor:
-        hashtags_list = ast.literal_eval(document['hashtags'])
-        # print(hashtags_list)
-        hype = document['hype']
-        img_url = document['img_url']
+        hashtags_list = ast.literal_eval(document[LOOK_HASHTAGS])
+        hype = document[LOOK_HYPE]
+        img_url = document[LOOK_IMG_URL]
 
         if hashtag in hashtags_list:
             hype_dict[img_url] = hype
@@ -69,6 +87,15 @@ def get_hype_by_tag(request):
 
 
 def get_dailypost_by_tag(request):
+    """
+    :return: For a given hashtag, the number of posts for each day
+
+    Args:
+        hashtag - target hashtag
+
+    Examples:
+        http://localhost:8000/get_dailypost_by_tag?hashtag=fashion
+    """
 
     std_response = HttpResponse('[]', content_type="application/json")
     hashtag = request.GET.get('hashtag', None)
@@ -83,9 +110,8 @@ def get_dailypost_by_tag(request):
     cursor = mongo_collection.find({})
 
     for document in cursor:
-        hashtags_list = ast.literal_eval(document['hashtags'])
-        # print(hashtags_list)
-        created_date = document['created'].date()
+        hashtags_list = ast.literal_eval(document[LOOK_HASHTAGS])
+        created_date = document[LOOK_CREATED].date()
 
         if hashtag in hashtags_list:
             if str(created_date) in result_dict:
@@ -99,8 +125,10 @@ def get_dailypost_by_tag(request):
     return std_response
 
 
-
 def get_mongo_collection():
+    """
+    :return: MongoDB collection instance created using credentials specified in django settings
+    """
     myclient = pymongo.MongoClient(settings.MONGO_CREDENTIALS)
     mydb = myclient[settings.MONGO_DB]
     collection = mydb[settings.MONGO_COLLECTION_NAME]

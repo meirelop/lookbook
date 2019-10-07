@@ -10,8 +10,8 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = 'lookscraper'
-# FEED_FORMAT = "csv"
-# FEED_URI = "lookscraper.csv"
+FEED_FORMAT = "csv"
+FEED_URI = "lookscraper.csv"
 
 SPIDER_MODULES = ['lookscraper.spiders']
 NEWSPIDER_MODULE = 'lookscraper.spiders'

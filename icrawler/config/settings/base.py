@@ -133,6 +133,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MONGO_CREDENTIALS = 'mongodb://meirkhan:meirkhan@localhost:27017/'
-MONGO_DB = 'test'
+MONGO_CREDENTIALS = loader.get_secret('DJANGO_DB_HOST')
+MONGO_DB = loader.get_secret('DJANGO_DB_NAME')
 MONGO_COLLECTION_NAME = 'icrawler_look'
+
+LOOK_ID = 'look_id'
+LOOK_FULL_ID = 'full_id'
+LOOK_IMG_URL = 'img_url'
+LOOK_HYPE = 'hype'
+LOOK_COUNTRY = 'country'
+LOOK_HASHTAGS = 'hashtags'
+LOOK_CREATED = 'created'
