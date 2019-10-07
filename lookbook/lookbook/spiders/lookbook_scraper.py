@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy.http.request import Request
 import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import math
+
 
 class LookbookScraperSpider(scrapy.Spider):
     PER_PAGE = 12
@@ -28,7 +28,7 @@ class LookbookScraperSpider(scrapy.Spider):
         parsed_s = [string.split()[:2]]
         time_dict = dict((fmt, float(amount)) for amount, fmt in parsed_s)
         if time_dict.get('months'):
-            past_time = date.today() - relativedelta(months=time_dict['months'])
+            past_time = datetime.datetime.now() - relativedelta(months=time_dict['months'])
         elif time_dict.get('years'):
             past_time = datetime.datetime.now() - datetime.timedelta(days=time_dict['years'] * 365)
         else:
@@ -39,9 +39,6 @@ class LookbookScraperSpider(scrapy.Spider):
 
 
     def parse_look(self, look):
-        import time
-        time.sleep(0.5)
-
         id = look.xpath("@data-look-id").extract()[0]
         full_id = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
         img = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0]
@@ -62,6 +59,7 @@ class LookbookScraperSpider(scrapy.Spider):
         }
 
         print('\n')
+        self.mongo_insert(item)
         return item
 
 
@@ -91,5 +89,12 @@ class LookbookScraperSpider(scrapy.Spider):
             request = scrapy.Request(url=country,
                                      callback=self.parse_country,
                                      cb_kwargs=dict(country_url=country))
-            # request.cb_kwargs['country_url'] = country
             yield request
+
+
+    def mongo_insert(self, document):
+        import pymongo
+        myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+        mydb = myclient["test"]
+        mycol = mydb["lookbook"]
+        x = mycol.insert_one(document)
