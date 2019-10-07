@@ -7,7 +7,7 @@
 
 from scrapy_djangoitem import DjangoItem
 
-from icrawler.models import Look
+from django_lookbook.models import Look
 
 class LookbookItem(DjangoItem):
     # define the fields for your item here like:

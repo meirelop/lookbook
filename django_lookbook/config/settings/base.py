@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-from icrawler.common.utils import LoadConf
+from django_lookbook.common.utils import LoadConf
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'icrawler'
+    'django_lookbook'
 ]
 
 MIDDLEWARE = [
@@ -54,7 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'icrawler.config.urls'
+ROOT_URLCONF = 'django_lookbook.config.urls'
 
 TEMPLATES = [
     {
@@ -73,7 +73,7 @@ TEMPLATES = [
 ]
 
 
-WSGI_APPLICATION = 'icrawler.config.wsgi.application'
+WSGI_APPLICATION = 'django_lookbook.config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -135,7 +135,7 @@ STATIC_URL = '/static/'
 
 MONGO_CREDENTIALS = loader.get_secret('DJANGO_DB_HOST')
 MONGO_DB = loader.get_secret('DJANGO_DB_NAME')
-MONGO_COLLECTION_NAME = 'icrawler_look'
+MONGO_COLLECTION_NAME = 'django_lookbook_look'
 
 LOOK_ID = 'look_id'
 LOOK_FULL_ID = 'full_id'

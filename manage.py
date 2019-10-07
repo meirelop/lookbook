@@ -5,7 +5,7 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'icrawler.config.settings.base')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_lookbook.config.settings.base')
     import django
     django.setup()
     try:

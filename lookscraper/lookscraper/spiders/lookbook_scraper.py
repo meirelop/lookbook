@@ -4,7 +4,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import math
 from ..items import LookbookItem
-from icrawler.config.settings.base import *
+from django_lookbook.config.settings.base import *
 
 class LookbookScraperSpider(scrapy.Spider):
     """
@@ -25,6 +25,7 @@ class LookbookScraperSpider(scrapy.Spider):
         :return: Python date in datetime format
         """
         string = string.replace('over', '')
+        string = string.replace('almost', '')
         string = string.replace('year', 'years')
         string = string.replace('month', 'months')
         string = string.replace('week', 'weeks')
