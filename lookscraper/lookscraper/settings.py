@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for lookbook project
+# Scrapy settings for lookscraper project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,16 +9,16 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'lookbook'
-FEED_FORMAT = "csv"
-FEED_URI = "lookbook.csv"
+BOT_NAME = 'lookscraper'
+# FEED_FORMAT = "csv"
+# FEED_URI = "lookscraper.csv"
 
-SPIDER_MODULES = ['lookbook.spiders']
-NEWSPIDER_MODULE = 'lookbook.spiders'
+SPIDER_MODULES = ['lookscraper.spiders']
+NEWSPIDER_MODULE = 'lookscraper.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'lookbook (+http://www.yourdomain.com)'
+#USER_AGENT = 'lookscraper (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -49,13 +49,13 @@ DOWNLOAD_DELAY = 3
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'lookbook.middlewares.LookbookSpiderMiddleware': 543,
+#    'lookscraper.middlewares.LookbookSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'lookbook.middlewares.LookbookDownloaderMiddleware': 543,
+#    'lookscraper.middlewares.LookbookDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -67,7 +67,7 @@ DOWNLOAD_DELAY = 3
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'lookbook.pipelines.LookbookPipeline': 300,
+#    'lookscraper.pipelines.LookbookPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -90,3 +90,13 @@ DOWNLOAD_DELAY = 3
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+import os
+import sys
+import django
+
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".."))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'icrawler.config.settings.base'
+
+django.setup()

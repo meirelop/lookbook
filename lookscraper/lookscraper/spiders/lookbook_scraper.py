@@ -4,6 +4,7 @@ import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import math
+from ..items import LookbookItem
 
 
 class LookbookScraperSpider(scrapy.Spider):
@@ -39,27 +40,33 @@ class LookbookScraperSpider(scrapy.Spider):
 
 
     def parse_look(self, look):
-        id = look.xpath("@data-look-id").extract()[0]
-        full_id = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
-        img = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0]
-        hypes = look.xpath("//div[@class='hype' and @data-look-id='%s']/div/text()" % id).extract()[0]
-        country = look.xpath("//div[@id='look_%s']//a[starts-with(@data-page-track,'byline - country')]/text()" % id).extract()[0]
-        hashtags = look.xpath("//div[@id='look_%s']/ul/li/a/text()" % id).extract()
-        timeago = look.xpath("//div[@id='look_%s']//div[@class='look-info']/text()" % id).extract()[-1].strip()
-        created = self.to_time(timeago)
+        item = LookbookItem()
 
-        item = {
-            'id': id,
-            'full_id': full_id,
-            'created': created,
-            'country': country,
-            'hashtags': hashtags,
-            'hypes': hypes,
-            'img_src': img,
-        }
+        id = look.xpath("@data-look-id").extract()[0]
+        item['look_id'] = id
+        item['full_id'] = look.xpath("//div[@id='look_%s']//div[@class='hype']/@data-look-url" % id).extract()[0].strip('/look/')
+        item['img_url'] = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0].strip('//')
+        item['hype'] = look.xpath("//div[@class='hype' and @data-look-id='%s']/div/text()" % id).extract()[0]
+        item['country'] = look.xpath("//div[@id='look_%s']//a[starts-with(@data-page-track,'byline - country')]/text()" % id).extract()[0]
+        item['hashtags'] = look.xpath("//div[@id='look_%s']/ul/li/a/text()" % id).extract()
+        timeago = look.xpath("//div[@id='look_%s']//div[@class='look-info']/text()" % id).extract()[-1].strip()
+        item['created'] = self.to_time(timeago)
+
+
+        # item = {
+        #     'id': id,
+        #     'full_id': full_id,
+        #     'created': created,
+        #     'country': country,
+        #     'hashtags': hashtags,
+        #     'hypes': hypes,
+        #     'img_src': img,
+        # }
 
         print('\n')
-        self.mongo_insert(item)
+        # self.mongo_insert(item)
+        item.save()
+
         return item
 
 
