@@ -15,7 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf.urls import url
+
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    url(r'^get_posts_by_country', views.get_posts_by_country),
+    url(r'^get_dailypost_by_tag', views.get_dailypost_by_tag),
+    url(r'^get_hype_by_tag', views.get_hype_by_tag),
 ]
+
+# handler403 = 'views.status_403'
+# handler404 = 'views.status_404'
+# handler500 = 'views.status_500'

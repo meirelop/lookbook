@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import datetime
-from datetime import date
 from dateutil.relativedelta import relativedelta
 import math
 from ..items import LookbookItem
@@ -10,11 +9,12 @@ from ..items import LookbookItem
 class LookbookScraperSpider(scrapy.Spider):
     PER_PAGE = 12
     INITIAL_PAGE = 1
-    max_items = 12
+    max_items = 100
     last_page = int(math.ceil(max_items/PER_PAGE))
     name = 'lookbook_scraper'
     # allowed_domains = ['www.lookbook.nu']
     start_urls = ['http://www.lookbook.nu/new']
+
 
     def to_time(self, string):
         string = string.replace('over', '')
@@ -48,33 +48,19 @@ class LookbookScraperSpider(scrapy.Spider):
         item['img_url'] = look.xpath("//a[@id='photo_%s']/img/@src" % id).extract()[0].strip('//')
         item['hype'] = look.xpath("//div[@class='hype' and @data-look-id='%s']/div/text()" % id).extract()[0]
         item['country'] = look.xpath("//div[@id='look_%s']//a[starts-with(@data-page-track,'byline - country')]/text()" % id).extract()[0]
-        item['hashtags'] = look.xpath("//div[@id='look_%s']/ul/li/a/text()" % id).extract()
+        hashtags_temp = look.xpath("//div[@id='look_%s']/ul/li/a/text()" % id).extract()
+        item['hashtags'] = [tag.replace('#', '') for tag in hashtags_temp]
         timeago = look.xpath("//div[@id='look_%s']//div[@class='look-info']/text()" % id).extract()[-1].strip()
         item['created'] = self.to_time(timeago)
 
-
-        # item = {
-        #     'id': id,
-        #     'full_id': full_id,
-        #     'created': created,
-        #     'country': country,
-        #     'hashtags': hashtags,
-        #     'hypes': hypes,
-        #     'img_src': img,
-        # }
-
         print('\n')
-        # self.mongo_insert(item)
         item.save()
-
         return item
 
 
     def parse_country(self, response, country_url):
-        # print("Parsing country...")
         look_xpath = "//div[starts-with(@id,'look_') and @class='look_v2']"
         for look in response.xpath(look_xpath):
-            # print(look)
             yield self.parse_look(look)
 
         self.INITIAL_PAGE += 1
@@ -90,18 +76,10 @@ class LookbookScraperSpider(scrapy.Spider):
         print("Processing..." + response.url)
         countries = response.xpath("//ul[@id='country_collections']/li/a/@href").extract()
         # countries = countries[0:1]
-        # print('TOTAL COUNTRIES: 43')
+        # print('TOTAL COUNTRIES:', countries)
         for country in countries:
             print(country)
             request = scrapy.Request(url=country,
                                      callback=self.parse_country,
                                      cb_kwargs=dict(country_url=country))
             yield request
-
-
-    def mongo_insert(self, document):
-        import pymongo
-        myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-        mydb = myclient["test"]
-        mycol = mydb["lookbook"]
-        x = mycol.insert_one(document)
