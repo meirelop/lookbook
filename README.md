@@ -95,13 +95,13 @@ Redis and/or RabbitMQ would be good fit for our case.
 RDBMS would not be best option given large amounts of data and necessity in low latency. Of course some RDBMS can be scaled horizontally, but it triggers other unnecessary problems. 
 Instead, in order to achieve horizontal scalability, it would be better to use noSQL such as MongoDB itself, or Hadoop cluster depending on other components.\
  
-#### API
+##### API
 Once we stored this data, we need them to be available within API. As a framework for providing API it is possible to use Flask, but Django better suits for big systems.\
-Another thing is, we need data to be accessed instantaneously, with low latency. (Could we use Spark here?).
+Another thing is, we need data to be accessed instantaneously, with low latency.
 To achieve low latency, for services like **given a country which returns the number of posts associated with each hashtag**,
 it is better to do all the calculations beforehand and store it in inmemory database, such as Redis (Ex. key-poland#fashion, value-120) (Can we use Spark here?)
 
-#### Duplicates
+##### Duplicates
 In order to avoid duplicates, I just created Unique Index for lookID, to ignore insertion to DB after crawling. 
 But it would be more efficient to store **Timestamp + lookID** (I am not sure if LookID is actually unique) as Unique Index and check before crawling if we have such item in the Database.
    
