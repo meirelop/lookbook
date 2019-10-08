@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^get_posts_by_country', views.get_posts_by_country),
     url(r'^get_dailypost_by_tag', views.get_dailypost_by_tag),
     url(r'^get_hype_by_tag', views.get_hype_by_tag),
+    url(r'^crawl', views.get_hype_by_tag),
 ]
 
 # handler403 = 'views.status_403'

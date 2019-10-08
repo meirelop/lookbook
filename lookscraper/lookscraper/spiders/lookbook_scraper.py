@@ -15,8 +15,19 @@ class LookbookScraperSpider(scrapy.Spider):
     max_items = 100
     last_page = int(math.ceil(max_items/PER_PAGE))  # calculate how many pages we need in order to get max_items items
     name = 'lookbook_scraper'
-    # allowed_domains = ['www.lookbook.nu']
     start_urls = ['http://www.lookbook.nu/new']
+    # allowed_domains = ['www.lookbook.nu']
+
+    # def __init__(self, *args, **kwargs):
+    #     # For passing args from our django view.
+    #     # To make everything dynamic, we need to override them inside __init__ method
+    #     self.url = kwargs.get('url')
+    #     self.start_urls = [self.url]
+    #     self.PER_PAGE = 12
+    #     self.INITIAL_PAGE = 1
+    #     self.max_items = kwargs.get('max_items')
+    #     self.last_page = int(math.ceil(self.max_items/self.PER_PAGE))
+    #     self.name = 'lookbook_scraper'
 
 
     def to_time(self, string):
