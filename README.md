@@ -76,26 +76,47 @@ scrapy crawl lookbook_scraper
 
 # Design Task
 ### 1. What changes would you perform to crawl and exploit millions of posts ?
-Problem needs to be divided into 2 parts: **Crawling** and **Data Processing**.
+Problem needs to be divided into several parts:
+
+##### Crawling
 In order to crawl massive amounts of data for sure we need something like distributed crawler.
 Where main components will be:
 
-- A crawler dispatcher, responsible for dispatching URLs to be crawled to the m crawler supervisors, and for collecting results (fields) from them.
-- m crawler supervisors, responsible for supervising n child processes. Those child processes would perform the actual crawling. I'll refer to them as crawlers for convenience.
+- A crawler dispatcher, responsible for dispatching URLs to be crawled to the crawler supervisors, and for collecting results (fields) from them.
+- Crawler supervisors, responsible for supervising child processes. Those child processes would perform the actual crawling. In case of lookbook.nu, every crawler would be responsible for certain amount of pages.
 In this particular case of lookbook.nu, we could divide supervisors by countries, so that each supervisor would be responsible for some little group of countries 
 - A database server, responsible for storing the initial seed URLs as well as the extracted fields. 
 
-**Data Processing and DB**
-RDBMS would be bad option given large amounts of data and necessity in low latency. Of course some RDBMS can be scaled horizontally, but it triggers other unnecessary problems. 
-Instead, in order to achieve horizontal scalability, it would be better to use noSQL such as MongoDB itself, or Hadoop cluster depending on other components.
-With Hadoop, as it is 'write once, read many times', we could use it's MapReduce tools to precalculate stuff and store it in memory database   
+#### Messaging
+Crawlers need to communicate with each other, to know which is responsible for which group of countries, pages etc.
+Redis and/or RabbitMQ would be good fit for our case.
 
+##### Data Processing and DB
+RDBMS would not be best option given large amounts of data and necessity in low latency. Of course some RDBMS can be scaled horizontally, but it triggers other unnecessary problems. 
+Instead, in order to achieve horizontal scalability, it would be better to use noSQL such as MongoDB itself, or Hadoop cluster depending on other components.\
+ 
+#### API
+Once we stored this data, we need them to be available within API. As a framework for providing API it is possible to use Flask, but Django better suits for big systems.\
+Another thing is, we need data to be accessed instantaneously, with low latency. (Could we use Spark here?).
+To achieve low latency, for services like **given a country which returns the number of posts associated with each hashtag**,
+it is better to do all the calculations beforehand and store it in inmemory database, such as Redis (Ex. key-poland#fashion, value-120) (Can we use Spark here?)
 
+#### Duplicates
+In order to avoid duplicates, I just created Unique Index for lookID, to ignore insertion to DB after crawling. 
+But it would be more efficient to store **Timestamp + lookID** (I am not sure if LookID is actually unique) as Unique Index and check before crawling if we have such item in the Database.
+   
+##### Monitoring, Testing and Logging
+In order to have full control on the project, it is necessary to have logging, unit tests and proper monitoring.
+Other than this, there might be necessity also on autotests.  
+E.g For notifying maintainer in case there are some design changes at source website or to compare our scraped results with ones in lookbook.nu. 
+For example lookbook shows us most 'hyped' posts by hashtag. And we can compare if our calculations matches with theirs.  
+   
 
 ### 2. Clients are interested in the evolution of hashtags in popularity (average “hype”), such as seeing which hashtags are currently the most popular, or which ones had a recent decrease in popularity
 #### a. How would you aggregate the “hype” of posts to compute it for each hashtag ?
 #### b. Since the “hype” of existing posts will change over time, how would you retrieve the updated “hype” of existing posts and update the hashtag popularity ?
-#### c. There are much more Lookbook users in the US and in Japan, which creates abias in the hashtag popularity. How would you normalize it to make each country equally important ?
+#### c. There are much more Lookbook users in the US and in Japan, which creates a bias in the hashtag popularity. How would you normalize it to make each country equally important ?
+
 
 ### 3. Clients are interested in trends from “StyleBoard”, a new social network. It has all the features of Lookbook, plus some additional stats such as the number of reposts. Clients must be able to filter hashtag popularity and other stats by the source of data. How would you modify the system to integrate this new source ?
  
