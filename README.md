@@ -89,17 +89,19 @@ In this particular case of lookbook.nu, we could divide supervisors by countries
 
 #### Messaging
 Crawlers need to communicate with each other, to know which is responsible for which group of countries, pages etc.
-Redis and/or RabbitMQ would be good fit for our case.
+Redis and/or RabbitMQ would be good fit for our case since both of them easy to use, manage and lightweight solutions.
 
 ##### Data Processing and DB
 RDBMS would not be best option given large amounts of data and necessity in low latency. Of course some RDBMS can be scaled horizontally, but it triggers other unnecessary problems. 
-Instead, in order to achieve horizontal scalability, it would be better to use noSQL such as MongoDB itself, or Hadoop cluster depending on other components.\
+Instead, in order to achieve horizontal scalability, it would be better to use noSQL such as MongoDB itself.\
+To have fault tolerancy and horizontal scalability it is necessary to deploy MongoDB sharded cluster with replicas of each server.
+In my opinion, MongoDB cluster would be best suit for this project. But if we are going to have much more data, and/or integrate with other data, create data lake, we can also consider using Hadoop cluster further.  
  
 ##### API
 Once we stored this data, we need them to be available within API. As a framework for providing API it is possible to use Flask, but Django better suits for big systems.\
 Another thing is, we need data to be accessed instantaneously, with low latency.
 To achieve low latency, for services like **given a country which returns the number of posts associated with each hashtag**,
-it is better to do all the calculations beforehand and store it in inmemory database, such as Redis (Ex. key-poland#fashion, value-120) (Can we use Spark here?)
+it is better to do all the calculations beforehand and store it in inmemory database, such as Redis (Ex. key-poland#fashion, value-120)
 
 ##### Duplicates
 In order to avoid duplicates, I just created Unique Index for lookID, to ignore insertion to DB after crawling. 
@@ -113,13 +115,50 @@ For example lookbook shows us most 'hyped' posts by hashtag. And we can compare 
    
 
 ### 2. Clients are interested in the evolution of hashtags in popularity (average “hype”), such as seeing which hashtags are currently the most popular, or which ones had a recent decrease in popularity
-#### a. How would you aggregate the “hype” of posts to compute it for each hashtag ?
-#### b. Since the “hype” of existing posts will change over time, how would you retrieve the updated “hype” of existing posts and update the hashtag popularity ?
-#### c. There are much more Lookbook users in the US and in Japan, which creates a bias in the hashtag popularity. How would you normalize it to make each country equally important ?
+Another way of finding popularity would be computing not the average hype, but the mentions of hashtag in distinct posts, or at least it should be taken into consideration.\
+Intuitively, a trending hashtag should be one that is being used more than usual, as a result of something specific that is happening in that moment.\
+If hashtag has spike, hence if hashtag has a huge mentions in recent looks compared to the past, the hashtag should be identified as trending right now.\
+To identify good trend, we can consider things like:
+- Popularity - the trend should be of interest for many people in community.
+- Novelty — the trend should be about something new. People were not posting about it before, or at least not with the same intensity.
+- Average number of hypes for hashtag
+Finally, we need filter to ignore hashtags with too low absolute value.
 
+Obviously, the calculation can be costly given the huge amount of hashtags everyday. In this case, we can consider using offline pipelines, same as described above.
+More specifically, we can keep several pipelines running in the offline that calculates the ratio of each tag and output the results to some storage system. 
+The pipelines may refresh every several hours/days assuming there’s no big difference between a short period of time. 
+So when 'the business' checks the trending topics from the API, we can just this user with pre-computed results.
+
+#### a. How would you aggregate the “hype” of posts to compute it for each hashtag ?
+
+Obviously, we cannot just take mean hype for each hashtag. Because hashtag #ILoveShittyDress could be only such hashtag, but it's average hype would be high.\
+It forces us to take into account also number of occurrences. With this logic, hashtag #look would be among trending, since it has tons of usage and have good average hype.\
+But in fact, it is one of the regular tags, which most probably can not be trending tag. Hence, we also should consider time. For simplicity, let's take just average time of posts with given tag.\
+So, if we need some tool to aggregate the hype without involving Data Science, base solution can be multiplication of features described above. 
+        
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
+
+
+#### b. Since the “hype” of existing posts will change over time, how would you retrieve the updated “hype” of existing posts and update the hashtag popularity ?
+To retrieve updated information for existing posts, we could use it's ID and periodically crawl from lookbook current hype and also update 'modified date' field.\
+Another service can recompute periodically popularity. But "freshness" of post related to the hashtag always should be one of the main features.
+While increased hype will increase hashtag's popularity, antiquity of post in contrary, will decrease it over time. 
+
+#### c. There are much more Lookbook users in the US and in Japan, which creates a bias in the hashtag popularity. How would you normalize it to make each country equally important ?
+We can equalize the weight of each country by computing the most popular hashtag in given country and taking ratio to each hashtag.\
+E.g. for given hashtag popularity X, popularity of normalized X = X - min(absolute popularity) / max(popularity) - min(absolute popularity)
+Ex: #sakura could be most popular in Japan, and since there are more users in Japan, it would affect to combined international results and show that it popular worldwide hashtag, when in fact it is mostly only in Japan.\
+We normalize it by taking #sakura popularity as 1. And for all the hashtags from Japan, we take ratio with respect to #sakura. From 0 to 1
 
 ### 3. Clients are interested in trends from “StyleBoard”, a new social network. It has all the features of Lookbook, plus some additional stats such as the number of reposts. Clients must be able to filter hashtag popularity and other stats by the source of data. How would you modify the system to integrate this new source ?
- 
+Considering 2 options:
+- several sources will have combined hashtag 'leaderboard', where we would normalize popularity
+- They will have separate 'leaderboard', and problem only in integration
 
 ### References
 - https://github.com/an-dev/grabber 
