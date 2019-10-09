@@ -137,9 +137,10 @@ It forces us to take into account also number of occurrences. With this logic, h
 But in fact, it is one of the regular tags, which most probably can not be trending tag. Hence, we also should consider time. For simplicity, let's take just average time of posts with given tag.
 So, if we need some tool to aggregate the hype before involving Data Science, base solution can be multiplication of normalized version of features described above. 
 
-**Aggregated hype  = Mean hype * normalized frequency * normalized time**        
+**Aggregated hype  = Mean hype * normalized frequency * normalized time**  
+      
 | Tags              | Mean hype     | Frequency  | Mean hours ago | Normalized freq.| 1-Normalized time| AGG hype | 
-| ------------------|:-------------:| ----------:| -------------- | ---------------:| ---------------- | -----:   |
+| ------------------|:-------------:| :---------:| :-------------:| :--------------:| :---------------:| :-------:|
 | #halloween        | 37            |   245      |      140       |     1           |       0.8        | 30       |
 | #RedTie           | 45            |   120      |      67        |     0.45        |       0.9        | 18       | 
 | #ILoveShittyDress | 350           |    1       |      3         |     0           |       1          | 0        | 
