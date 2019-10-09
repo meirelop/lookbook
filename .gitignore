@@ -1,4 +1,6 @@
 # General
+.gitignore
+.idea
 .DS_Store
 .AppleDouble
 .LSOverride
