@@ -122,6 +122,7 @@ To identify good trend, we can consider things like:
 - Popularity - the trend should be of interest for many people in community.
 - Novelty — the trend should be about something new. People were not posting about it before, or at least not with the same intensity.
 - Average number of hypes for hashtag
+- Karma of users
 Finally, we need filter to ignore hashtags with too low absolute value.
 
 Obviously, the calculation can be costly given the huge amount of hashtags everyday. In this case, we can consider using offline pipelines, same as described above.
@@ -132,19 +133,22 @@ So when 'the business' checks the trending topics from the API, we can just this
 #### a. How would you aggregate the “hype” of posts to compute it for each hashtag ?
 
 Obviously, we cannot just take mean hype for each hashtag. Because hashtag #ILoveShittyDress could be only such hashtag, but it's average hype would be high.\
-It forces us to take into account also number of occurrences. With this logic, hashtag #look would be among trending, since it has tons of usage and have good average hype.\
-But in fact, it is one of the regular tags, which most probably can not be trending tag. Hence, we also should consider time. For simplicity, let's take just average time of posts with given tag.\
-So, if we need some tool to aggregate the hype without involving Data Science, base solution can be multiplication of normalized version of features described above. 
-        
-| Tags              | AVG hype      | Frequency  | AVG hours ago  | 
-| ------------------|:-------------:| ----------:| -------------- |
-| #halloween        | 23            |   245      |      140       |
-| #RedTie           | 45            |   120      |      67        |
-| #ILoveShittyDress | 350           |    1       |      3         |
-| #autumn           | 95            |   180      |      670       |
-| #dress            | 150           |   150      |      380       |    
+It forces us to take into account also number of occurrences. With this logic, hashtag #look would be among trending, since it has tons of usage and have good average hype.
+But in fact, it is one of the regular tags, which most probably can not be trending tag. Hence, we also should consider time. For simplicity, let's take just average time of posts with given tag.
+So, if we need some tool to aggregate the hype before involving Data Science, base solution can be multiplication of normalized version of features described above. 
 
+**Aggregated hype  = Mean hype * normalized frequency * normalized time**        
+| Tags              | Mean hype     | Frequency  | Mean hours ago | Normalized freq.| 1-Normalized time| AGG hype | 
+| ------------------|:-------------:| ----------:| -------------- | ---------------:| ---------------- | -----:   |
+| #halloween        | 37            |   245      |      140       |     1           |       0.8        | 30       |
+| #RedTie           | 45            |   120      |      67        |     0.45        |       0.9        | 18       | 
+| #ILoveShittyDress | 350           |    1       |      3         |     0           |       1          | 0        | 
+| #autumn           | 95            |   180      |      670       |     0.7         |       0          | 0        | 
+| #dress            | 85            |   150      |      380       |     0.4         |       0.4        | 13       |
+| #sakura           | 80            |   60       |      120       |     0.24        |       0.8        | 15       |
 
+To sum up, with this kind of logic we would prevent rare tags (#ILoveShittyDress) and regular tags (#autumn) from having big influence.
+And even though some tags would have low mean hype value, (#halloween, #RedTie) we can say that they are trending thanks to their distribution across community and average freshness of posts.    
 
 #### b. Since the “hype” of existing posts will change over time, how would you retrieve the updated “hype” of existing posts and update the hashtag popularity ?
 To retrieve updated information for existing posts, we could use it's ID and periodically crawl from lookbook current hype and also update 'modified date' field.\
@@ -158,9 +162,8 @@ Ex: #sakura could be most popular in Japan, and since there are more users in Ja
 We normalize it by taking #sakura popularity as 1. And for all the hashtags from Japan, we take ratio with respect to #sakura. From 0 to 1
 
 ### 3. Clients are interested in trends from “StyleBoard”, a new social network. It has all the features of Lookbook, plus some additional stats such as the number of reposts. Clients must be able to filter hashtag popularity and other stats by the source of data. How would you modify the system to integrate this new source ?
-Considering 2 options:
-- several sources will have combined hashtag 'leaderboard', where we would normalize popularity
-- They will have separate 'leaderboard', and problem only in integration
+From technical point of view, if we are going to integrate another platforms in the future, most importantly we should design database, services, API, data types and etc. as abstract as possible.
+  
 
 ### References
 - https://github.com/an-dev/grabber 
