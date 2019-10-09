@@ -134,13 +134,15 @@ So when 'the business' checks the trending topics from the API, we can just this
 Obviously, we cannot just take mean hype for each hashtag. Because hashtag #ILoveShittyDress could be only such hashtag, but it's average hype would be high.\
 It forces us to take into account also number of occurrences. With this logic, hashtag #look would be among trending, since it has tons of usage and have good average hype.\
 But in fact, it is one of the regular tags, which most probably can not be trending tag. Hence, we also should consider time. For simplicity, let's take just average time of posts with given tag.\
-So, if we need some tool to aggregate the hype without involving Data Science, base solution can be multiplication of features described above. 
+So, if we need some tool to aggregate the hype without involving Data Science, base solution can be multiplication of normalized version of features described above. 
         
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
-| col 2 is      | centered      |   $12 |
-| zebra stripes | are neat      |    $1 |
+| Tags              | AVG hype      | Frequency  | AVG hours ago  | 
+| ------------------|:-------------:| ----------:| -------------- |
+| #halloween        | 23            |   245      |      140       |
+| #RedTie           | 45            |   120      |      67        |
+| #ILoveShittyDress | 350           |    1       |      3         |
+| #autumn           | 95            |   180      |      670       |
+| #dress            | 150           |   150      |      380       |    
 
 
 
