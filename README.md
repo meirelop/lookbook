@@ -3,8 +3,8 @@
 Web app featuring new looks from every country from lookbook.nu
 
 --master edit
---dev edit 
-
+--dev edit
+--master edit 2
 Scrapes and saves following fields as a MongoDB document:
 - ID (Unique integer)
 - Full ID (string)
